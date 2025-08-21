@@ -1,0 +1,367 @@
+{% extends "base.html" %}
+
+{% block title %}Scan Parts{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+  <div class="scan-form pb-3">
+    <div class="card-body">
+      <h2 class="text-center mb-4">
+        <i class="fas fa-qrcode me-2"></i>FQC-DEWAS Part Checker
+      </h2>
+
+      <div class="scan-form">
+        <div class="form-group mb-4">
+          <label class="form-label">
+            <i class="fas fa-crown me-2"></i>Crown Serial Number
+          </label>
+          <input type="text" id="crown_scan" class="form-control form-control-lg" 
+                 placeholder="Scan Crown Part" autofocus>
+        </div>
+
+        <div class="form-group mb-4">
+          <label class="form-label">
+            <i class="fas fa-cog me-2"></i>Pinion Serial Number
+          </label>
+          <input type="text" id="pinion_scan" class="form-control form-control-lg" 
+                 placeholder="Scan Pinion Part">
+        </div>
+      </div>
+
+      <div id="result_section" class="mt-4 d-none">
+        <!-- OK / NOT OK Message -->
+        <div id="status_message" class="fw-bold fs-2 py-3 text-center"></div>
+
+        <!-- Full width result row -->
+        <table class="table table-bordered table-striped text-center w-100 align-middle" style="font-size: 1.05rem;">
+          <thead class="table-light">
+            <tr>
+              <th>UserName</th>
+              <th>Timestamp</th>
+              <th>Shift</th>
+              <th>Crown Scan</th>
+              <th>Pinion Scan</th>
+              <th>Crown ID</th>
+              <th>Pinion ID</th>
+              <th>Crown Set</th>
+              <th>Pinion Set</th>
+              <th>ED No</th>
+              <th>Repeat No</th>
+              <th>Set Match</th>
+              <th>Part Match</th>
+              <th>Overall</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td id="res_username"></td>
+              <td id="res_timestamp"></td>
+              <td id="res_shift"></td>
+              <td id="res_crown_scan"></td>
+              <td id="res_pinion_scan"></td>
+              <td id="res_crown_id"></td>
+              <td id="res_pinion_id"></td>
+              <td id="res_crown_set"></td>
+              <td id="res_pinion_set"></td>
+              <td id="res_ed_no"></td>
+              <td id="res_repeat_no"></td>
+              <td id="res_set_match"></td>
+              <td id="res_part_match"></td>
+              <td id="res_overall_status"></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div id="ok_btn_container" class="text-center mt-3 d-none">
+          <button id="ok_btn" class="btn btn-success btn-lg" type="button">
+            <i class="fas fa-check-circle me-2"></i>OK
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.scan-card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+.form-control {
+    border: 2px solid #dee2e6;
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    font-size: 1.2rem;
+    transition: all 0.3s ease;
+}
+.form-control:focus {
+    border-color:rgb(62, 112, 150);
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+.table {
+    width: 100%;
+    table-layout: auto;
+    font-size: 1.05rem;
+    border-collapse: collapse;
+    margin-bottom: 0;
+}
+.bg-green {
+    background-color:rgb(133, 192, 148) !important;
+    font-weight: bold;
+}
+.bg-red {
+    background-color:rgb(200, 133, 137) !important;
+    font-weight: bold;
+}
+.table th,
+.table td {
+    padding: 0.75rem;
+    vertical-align: middle;
+    text-align: center;
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: break-word;
+}
+.table th {
+    background-color: #e9ecef;
+    font-weight: 600;
+    font-size: 1rem;
+}
+#status_message {
+    font-size: 2.25rem;
+    font-weight: bold;
+    text-align: center;
+    margin: 1rem 0;
+}
+@media (max-width: 992px) {
+    .table {
+        font-size: 0.95rem;
+    }
+    .table th {
+        font-size: 0.85rem;
+    }
+    #status_message {
+        font-size: 1.6rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Focus crown scan on page load
+window.onload = function() {
+    document.getElementById('crown_scan').focus();
+};
+
+// Move to pinion scan on Enter in crown scan
+document.getElementById('crown_scan').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        document.getElementById('pinion_scan').focus();
+    }
+});
+
+// Submit on Enter in pinion scan
+document.getElementById('pinion_scan').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        submitScans();
+    }
+});
+
+// Extract ID & Set No from scan
+function extractID(scan) {
+    const match = scan.toLowerCase().match(/p([a-z]+)(\d+)/);
+    if (match) {
+        const prefix = match[1].toUpperCase();
+        const digits = match[2];
+        return prefix + digits;
+    }
+    return '';
+}
+
+function extractSet(scan) {
+    const match = scan.toLowerCase().match(/#t([^#]+)#/);
+    return match ? match[1].toUpperCase() : '';
+}
+
+function submitScans() {
+    const crownScan = document.getElementById('crown_scan').value.trim();
+    const pinionScan = document.getElementById('pinion_scan').value.trim();
+
+    if (!crownScan || !pinionScan) return;
+
+    const crownID = extractID(crownScan);
+    const pinionID = extractID(pinionScan);
+    const crownSet = extractSet(crownScan);
+    const pinionSet = extractSet(pinionScan);
+
+    const partMatch = crownID === pinionID ? 'YES' : 'NO';
+    const setMatch = crownSet === pinionSet ? 'YES' : 'NO';
+    const overallStatus = (partMatch === 'YES' && setMatch === 'YES') ? 'OK' : 'NOT OK';
+
+    fetch('/process_scan_qr1', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            crown_scan: crownScan,
+            pinion_scan: pinionScan,
+            crown_id: crownID,
+            pinion_id: pinionID,
+            crown_set: crownSet,
+            pinion_set: pinionSet,
+            part_match: partMatch,
+            set_match: setMatch,
+            overall_status: overallStatus
+        })
+    })
+    .then(res => res.json().then(data => ({ status: res.status, body: data })))
+    .then(({ status, body }) => {
+        if (status !== 200 || body.status !== 'success') {
+            showError(body.message || 'Scan failed');
+        } else {
+            showResult(body);
+        }
+    });
+}
+
+function showResult(data) {
+    const section = document.getElementById('result_section');
+    const statusMessage = document.getElementById('status_message');
+    const details = data.details;
+
+    // Reset status message
+    statusMessage.className = '';
+
+    // Set OK / NOT OK main message
+    if (details.overall_status === 'OK') {
+        statusMessage.textContent = '✅ OK - Parts Match';
+        statusMessage.classList.add('bg-green', 'text-center', 'fs-2', 'py-3');
+    } else {
+        statusMessage.textContent = '❌ NOT OK - Mismatch Found';
+        statusMessage.classList.add('bg-red', 'text-center', 'fs-2', 'py-3');
+    }
+
+    // Populate values
+    document.getElementById('res_username').textContent = data.username || 'N/A';
+    document.getElementById('res_timestamp').textContent = data.timestamp || new Date().toLocaleString();
+    document.getElementById('res_shift').textContent = data.shift || '-';
+    document.getElementById('res_crown_scan').textContent = data.crown_scan || '-';
+    document.getElementById('res_pinion_scan').textContent = data.pinion_scan || '-';
+    document.getElementById('res_crown_id').textContent = details.crown_id || '-';
+    document.getElementById('res_pinion_id').textContent = details.pinion_id || '-';
+    document.getElementById('res_crown_set').textContent = details.crown_set || '-';
+    document.getElementById('res_pinion_set').textContent = details.pinion_set || '-';
+    document.getElementById('res_ed_no').textContent = details.ed_no || '-';
+
+    // Repeat No Highlight
+    const repeatElem = document.getElementById('res_repeat_no');
+    const isFirst = details.repeat_no === '' || details.repeat_no === '1';
+    repeatElem.textContent = details.repeat_no || '';
+    repeatElem.className = isFirst ? 'bg-green' : 'bg-red';
+
+    // Set Match Highlight
+    const setMatchElem = document.getElementById('res_set_match');
+    setMatchElem.textContent = details.set_match || '-';
+    setMatchElem.className = details.set_match === 'YES' ? 'bg-green' : 'bg-red';
+
+    // Part Match Highlight
+    const partMatchElem = document.getElementById('res_part_match');
+    partMatchElem.textContent = details.part_match || '-';
+    partMatchElem.className = details.part_match === 'YES' ? 'bg-green' : 'bg-red';
+
+    // Overall Status Highlight
+    const overallElem = document.getElementById('res_overall_status');
+    overallElem.textContent = details.overall_status || '-';
+    overallElem.className = details.overall_status === 'OK' ? 'bg-green' : 'bg-red';
+
+    // Show section
+    section.classList.remove('d-none');
+
+    // Show OK button and focus it
+    showOkButton();
+}
+
+function showError(msg) {
+    const section = document.getElementById('result_section');
+    const statusMessage = document.getElementById('status_message');
+
+    // Clear previous values
+    const fields = [
+        'res_username', 'res_timestamp', 'res_shift',
+        'res_crown_scan', 'res_pinion_scan',
+        'res_crown_id', 'res_pinion_id',
+        'res_crown_set', 'res_pinion_set',
+        'res_ed_no', 'res_repeat_no',
+        'res_set_match', 'res_part_match', 'res_overall_status'
+    ];
+    fields.forEach(id => {
+        const elem = document.getElementById(id);
+        if (elem) {
+            elem.textContent = '-';
+            elem.className = '';
+        }
+    });
+
+    // Show error message
+    statusMessage.textContent = `❌ ${msg}`;
+    statusMessage.className = 'text-danger fw-bold text-center fs-4 py-3';
+
+    // Show section and OK button
+    section.classList.remove('d-none');
+    showOkButton();
+}
+
+// Show OK button and set focus/Enter handler
+function showOkButton() {
+    let okBtn = document.getElementById('ok_btn');
+    let okBtnContainer = document.getElementById('ok_btn_container');
+    if (okBtn && okBtnContainer) {
+        okBtnContainer.classList.remove('d-none');
+        okBtn.classList.remove('d-none');
+        okBtn.focus();
+        okBtn.onclick = clearResultAndFocus;
+        okBtn.onkeydown = function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                clearResultAndFocus();
+            }
+        };
+    }
+}
+
+// Clear result and focus crown scan
+function clearResultAndFocus() {
+    clearInputs();
+    document.getElementById('crown_scan').focus();
+    let okBtnContainer = document.getElementById('ok_btn_container');
+    if (okBtnContainer) okBtnContainer.classList.add('d-none');
+}
+
+function clearInputs() {
+    document.getElementById('crown_scan').value = '';
+    document.getElementById('pinion_scan').value = '';
+    // Clear table values and highlights
+    const fields = [
+        'res_username', 'res_timestamp', 'res_shift',
+        'res_crown_scan', 'res_pinion_scan',
+        'res_crown_id', 'res_pinion_id',
+        'res_crown_set', 'res_pinion_set',
+        'res_ed_no', 'res_repeat_no',
+        'res_set_match', 'res_part_match', 'res_overall_status'
+    ];
+    fields.forEach(id => {
+        const elem = document.getElementById(id);
+        if (elem) {
+            elem.textContent = '-';
+            elem.className = '';
+        }
+    });
+    document.getElementById('result_section').classList.add('d-none');
+}
+</script>
+{% endblock %}

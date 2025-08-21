@@ -1,0 +1,405 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Operators{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="mb-0">
+                        <i class="fas fa-users me-2"></i>Manage Operators
+                    </h2>
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addOperatorModal">
+                        <i class="fas fa-user-plus me-2"></i>Add Operator
+                    </button>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Employee ID</th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for operator in operators %}
+                            <tr>
+                                <td>{{ operator.employee_id }}</td>
+                                <td>{{ operator.first_name }} {{ operator.last_name }}</td>
+                                <td>{{ operator.email }}</td>
+                                <td>{{ operator.phone_number }}</td>
+                                <td>
+                                    <span class="badge {% if operator.is_active %}bg-success{% else %}bg-danger{% endif %}">
+                                        {{ 'Active' if operator.is_active else 'Inactive' }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary me-1" 
+                                            onclick="editOperator('{{ operator.employee_id }}')">
+                                        <i class="fas fa-edit icon-blue"></i>
+
+                                    </button>
+                                    <button class="btn btn-sm {% if operator.is_active %}btn-outline-danger{% else %}btn-outline-success{% endif %}" 
+                                            onclick="toggleOperatorStatus('{{ operator.employee_id }}', {{ operator.is_active|tojson }})">
+                                        <i class="fas {% if operator.is_active %}fa-user-slash{% else %}fa-user-check{% endif %}"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Operator Modal -->
+<div class="modal fade" id="addOperatorModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-user-plus me-2"></i>Add New Operator
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addOperatorForm" class="needs-validation" novalidate>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Employee ID</label>
+                            <input type="text" class="form-control" name="employee_id" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Username</label>
+                            <input type="text" class="form-control" name="username" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">First Name</label>
+                            <input type="text" class="form-control" name="first_name" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Last Name</label>
+                            <input type="text" class="form-control" name="last_name" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" name="email"  >
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Phone Number</label>
+                            <input type="tel" class="form-control" name="phone_number"  >
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Password</label>
+                            <input type="password" class="form-control" name="password" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Confirm Password</label>
+                            <input type="password" class="form-control" name="confirm_password" required>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Cancel
+                </button>
+                <button type="button" class="btn btn-primary" onclick="submitAddOperator()">
+                    <i class="fas fa-save me-2"></i>Save
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Operator Modal -->
+<div class="modal fade" id="editOperatorModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-user-edit me-2"></i>Edit Operator
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editOperatorForm" class="needs-validation" novalidate>
+                    <input type="hidden" name="employee_id">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Username</label>
+                            <input type="text" class="form-control" name="username" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">First Name</label>
+                            <input type="text" class="form-control" name="first_name" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Last Name</label>
+                            <input type="text" class="form-control" name="last_name" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" name="email"  >
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Phone Number</label>
+                            <input type="tel" class="form-control" name="phone_number"  >
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" name="change_password" id="changePassword">
+                                <label class="form-check-label" for="changePassword">Change Password</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6 password-fields d-none">
+                            <label class="form-label">New Password</label>
+                            <input type="password" class="form-control" name="password">
+                        </div>
+                        <div class="col-md-6 password-fields d-none">
+                            <label class="form-label">Confirm New Password</label>
+                            <input type="password" class="form-control" name="confirm_password">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Cancel
+                </button>
+                <button type="button" class="btn btn-primary" onclick="submitEditOperator()">
+                    <i class="fas fa-save me-2"></i>Save Changes
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function editOperator(employeeId) {
+    // Fetch operator details and populate form
+    fetch(`/operator/${employeeId}`)
+        .then(response => response.json())
+        .then(data => {
+            const form = document.getElementById('editOperatorForm');
+            form.elements['employee_id'].value = data.employee_id;
+            form.elements['username'].value = data.username;
+            form.elements['first_name'].value = data.first_name;
+            form.elements['last_name'].value = data.last_name;
+            form.elements['email'].value = data.email;
+            form.elements['phone_number'].value = data.phone_number;
+            
+            new bootstrap.Modal(document.getElementById('editOperatorModal')).show();
+        });
+}
+
+function toggleOperatorStatus(employeeId, currentStatus) {
+    if (confirm(`Are you sure you want to ${currentStatus ? 'deactivate' : 'activate'} this operator?`)) {
+        fetch(`/toggle_operator/${employeeId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                location.reload();
+            } else {
+                alert(data.message || data.error || 'Failed to toggle status');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Something went wrong while updating status.');
+        });
+    }
+}
+
+
+function submitAddOperator() {
+    const form = document.getElementById('addOperatorForm');
+    if (form.checkValidity()) {
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
+
+        if (!data.username?.trim()) {
+            alert("Username is required");
+            return;
+        }
+        if (!data.first_name?.trim()) {
+            alert("First name is required");
+            return;
+        }
+        if (!data.last_name?.trim()) {
+            alert("Last name is required");
+            return;
+        }
+
+        const emailRegex = /^[\w\.-]+@[\w\.-]+\.\w+$/;
+        const phoneRegex = /^\d{10}$/;
+
+        if (data.email && !emailRegex.test(data.email)) {
+            alert("Invalid email format");
+            return;
+        }
+
+        if (data.phone_number && !phoneRegex.test(data.phone_number)) {
+            alert("Mobile number must be 10 digits");
+            return;
+        }
+        if (!data.password || !data.confirm_password) {
+            alert("Password and Confirm Password are required");
+            return;
+        }
+
+        if (data.password !== data.confirm_password) {
+            alert("Passwords do not match");
+            return;
+        }
+
+
+
+        fetch('/add_operator', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                location.reload();
+            } else {
+                alert(data.message || data.error || 'Failed to add operator');
+            }
+        });
+    }
+    form.classList.add('was-validated');
+}
+
+function submitEditOperator() {
+    const form = document.getElementById('editOperatorForm');
+    if (form.checkValidity()) {
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
+
+        if (!data.username?.trim()) {
+            alert("Username is required");
+            return;
+        }
+        if (!data.first_name?.trim()) {
+            alert("First name is required");
+            return;
+        }
+        if (!data.last_name?.trim()) {
+            alert("Last name is required");
+            return;
+        }
+
+        const emailRegex = /^[\w\.-]+@[\w\.-]+\.\w+$/;
+        const phoneRegex = /^\d{10}$/;
+
+        if (data.email && !emailRegex.test(data.email)) {
+            alert("Invalid email format");
+            return;
+        }
+
+        if (data.phone_number && !phoneRegex.test(data.phone_number)) {
+            alert("Mobile number must be 10 digits");
+            return;
+        }
+        const changePassword = document.getElementById('changePassword');
+        if (changePassword && changePassword.checked) {
+            if (!data.password || !data.confirm_password) {
+                alert("Please fill both password fields");
+                return;
+            }
+            if (data.password !== data.confirm_password) {
+                alert("Passwords do not match");
+                return;
+            }
+        } else {
+            delete data.password;
+            delete data.confirm_password;
+        }
+        
+
+
+        fetch(`/update_operator/${data.employee_id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                location.reload();
+            } else {
+                alert(data.message || data.error || 'Failed to update operator');
+            }
+        });
+    }
+    form.classList.add('was-validated');
+}
+
+
+// Toggle password fields visibility
+document.getElementById('changePassword').addEventListener('change', function(e) {
+    const passwordFields = document.querySelectorAll('.password-fields');
+    passwordFields.forEach(field => {
+        field.classList.toggle('d-none');
+        const inputs = field.querySelectorAll('input');
+        inputs.forEach(input => {
+            input.required = e.target.checked;
+        });
+    });
+});
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.table th {
+    background-color: #f8f9fa;
+}
+
+.badge {
+    font-size: 0.9em;
+    padding: 0.5em 0.75em;
+}
+
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+}
+
+.modal-content {
+    border-radius: 15px;
+}
+
+.modal-header {
+    background-color: #f8f9fa;
+    border-radius: 15px 15px 0 0;
+}
+
+.icon-blue {
+    color: rgb(62, 112, 150) !important;
+}
+
+
+.form-control:focus {
+    border-color:rgb(62, 112, 150);
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+</style>
+{% endblock %}

@@ -1,0 +1,241 @@
+<div class="row">
+    <div class="col-md-12 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="mb-0"><i class="fas fa-tools me-2"></i>FQC-DEWAS Parts</h2>
+                    <div>
+                        <button type="button" class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#addPartModal">
+                            <i class="fas fa-plus me-2"></i>Add Single Part
+                        </button>
+                        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#uploadExcelModal">
+                            <i class="fas fa-file-excel me-2"></i>Upload Excel
+                        </button>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID Number</th>
+                                <th>ED Number</th>
+                                <th>Status</th>
+                                <th>Created Date</th>
+                                <th>Modified Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for part in qr1_parts %}
+                            <tr>
+                                <td>{{ part.id_no }}</td>
+                                <td>{{ part.ed }}</td>
+                                <td>
+                                    <span class="badge {% if part.status == 'ACTIVE' %}bg-success{% else %}bg-danger{% endif %}">
+                                        {{ part.status }}
+                                    </span>
+                                </td>
+                                <td>{{ part.created_date }}</td>
+                                <td>{{ part.modified_date }}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary me-1" onclick="editQR1Part('{{ part.id_no }}')">
+                                        <i class="fas fa-edit icon-blue"></i>
+                                    </button>
+                                    <button class="btn btn-sm {% if part.status == 'ACTIVE' %}btn-outline-success{% else %}btn-outline-danger{% endif %}"
+                                            onclick="toggleQR1Status('{{ part.id_no }}', '{{ part.status }}')"
+                                            title="Toggle Status">
+                                        <i class="fas {% if part.status == 'ACTIVE' %}fa-check-circle{% else %}fa-ban{% endif %}"></i>
+                                    </button>
+
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modals: Add, Upload, Edit -->
+{% include 'partials/qr1_modals.html' %}
+
+<script>
+function editQR1Part(idNo) {
+  fetch(`/api/parts/${idNo}`)
+    .then(res => res.json())
+    .then(data => {
+      const form = document.getElementById('editPartForm');
+      if (!form) return;
+      form.elements['id'].value = data.id;
+      form.elements['original_id_no'].value = data.id_no;
+      form.elements['id_no'].value = data.id_no;
+      form.elements['ed'].value = data.ed;
+      form.elements['status'].value = data.status;
+
+      const modal = new bootstrap.Modal(document.getElementById('editPartModal'));
+      modal.show();
+    })
+    .catch(err => {
+      console.error("Failed to load part:", err);
+      alert("Unable to load part data.");
+    });
+}
+
+function submitEditPart() {
+  const form = document.getElementById('editPartForm');
+  if (form.checkValidity()) {
+    const data = Object.fromEntries(new FormData(form).entries());
+    const id = data.id;
+
+    fetch(`/update_part/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    })
+    .then(res => res.json())
+    .then(res => {
+      if (res.status === 'success') {
+        location.reload();
+      } else {
+        alert(res.message || res.error || 'Update failed');
+      }
+    })
+    .catch(err => {
+      console.error("Update error:", err);
+      alert("Something went wrong.");
+    });
+  }
+
+  form.classList.add('was-validated');
+}
+
+function deleteQR1Part(idNo) {
+    if (confirm('Delete this part?')) {
+        fetch(`/api/parts/${idNo}`, { method: 'DELETE' })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // ✅ Optional: remember active tab if needed
+                    localStorage.setItem('activePartsTab', '#qr1');
+                    location.reload();
+                } else {
+                    alert(data.message || data.error || 'Failed to delete part.');
+                }
+            })
+            .catch(err => {
+                console.error('Delete failed:', err);
+                alert('Something went wrong.');
+            });
+    }
+}
+
+function submitAddPart() {
+    const form = document.getElementById('addPartForm');
+    if (form.checkValidity()) {
+        const data = Object.fromEntries(new FormData(form).entries());
+        fetch('/add_part', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        }).then(res => res.json())
+          .then(data => data.status === 'success' ? location.reload() : alert(data.message || data.error || 'Failed to add part'));
+    }
+    form.classList.add('was-validated');
+}
+
+ 
+
+ 
+function submitExcelUpload() {
+    const form = document.getElementById('uploadExcelForm');
+    const fileInput = form.querySelector('input[name="file"]');
+    const statusDiv = document.getElementById('excelUploadStatus');
+    const modal = new bootstrap.Modal(document.getElementById('excelUploadResultModal'));
+    const modalTitle = document.getElementById('excelUploadResultTitle');
+    const modalBody = document.getElementById('excelUploadResultBody');
+
+    statusDiv.style.display = 'none';
+
+    if (!fileInput.files.length) {
+        statusDiv.textContent = "Please select a file.";
+        statusDiv.style.display = 'block';
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', fileInput.files[0]);
+
+    fetch('/upload_parts_excel', {
+        method: 'POST',
+        body: formData
+    }).then(res => res.json())
+      .then(data => {
+          if (data.status === 'success') {
+              const inserted = data.inserted;
+              const skipped = data.skipped;
+              const skippedIDs = data.skipped_ids || [];
+
+              modalTitle.textContent = "✅ Upload Successful";
+              modalBody.innerHTML = `
+                  <p><strong>Total Processed:</strong> ${inserted + skipped}</p>
+                  <p><strong>✅ Inserted:</strong> ${inserted}</p>
+                  <p><strong>⚠️ Skipped:</strong> ${skipped}</p>
+                  ${skipped > 0 ? `<p><strong>⛔ Skipped IDs:</strong><br><code>${skippedIDs.join(', ')}</code></p>` : ''}
+              `;
+          } else {
+              modalTitle.textContent = "❌ Upload Failed";
+              modalBody.innerHTML = `<p>${data.error || 'Unknown error'}</p>`;
+          }
+          modal.show();
+      })
+      .catch(err => {
+          modalTitle.textContent = "❌ Upload Error";
+          modalBody.innerHTML = `<p>${err.message}</p>`;
+          modal.show();
+      });
+
+    form.classList.add('was-validated');
+}
+ 
+function toggleQR1Status(idNo, currentStatus) {
+  const newStatus = currentStatus === 'ACTIVE' ? 'NOT_ACTIVE' : 'ACTIVE';
+
+  if (!confirm(`Are you sure you want to mark this part as ${newStatus}?`)) return;
+
+  fetch(`/api/parts/${idNo}/toggle`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status: newStatus })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.status === 'success') {
+      localStorage.setItem('activePartsTab', '#qr1');  // Retain QR1 tab
+      location.reload();
+    } else {
+      alert(data.message || data.error || 'Failed to update status.');
+    }
+  })
+  .catch(err => {
+    console.error('Status toggle failed:', err);
+    alert('Something went wrong.');
+  });
+}
+
+
+
+</script>
+
+<style>
+.icon-blue { color: rgb(62, 112, 150) !important; }
+.badge { font-size: 0.9em; padding: 0.5em 0.75em; }
+.modal-content { border-radius: 15px; }
+.modal-header { background-color: #f8f9fa; border-radius: 15px 15px 0 0; }
+.form-control:focus, .form-select:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.25rem rgba(13,110,253,0.25);
+}
+</style>

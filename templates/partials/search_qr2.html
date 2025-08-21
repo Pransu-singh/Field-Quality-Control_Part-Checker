@@ -1,0 +1,110 @@
+<!-- ✅ FQC-THANE Search Form -->
+<form method="POST" class="row g-3 mb-3">
+  <input type="hidden" name="search_type" value="qr2">
+  
+  <div class="col-md-4">
+    <input type="text" name="serial_no" class="form-control" placeholder="Search by Serial Number" value="{{ request.form.serial_no }}">
+  </div>
+  <div class="col-md-4">
+    <input type="text" name="set_no" class="form-control" placeholder="Search by Set Number" value="{{ request.form.set_no }}">
+  </div>
+  <div class="col-md-4">
+    <input type="text" name="id_no" class="form-control" placeholder="Search by ID Number" value="{{ request.form.id_no }}">
+  </div>
+  <div class="col-12 text-end">
+    <button class="btn btn-primary" type="submit">
+      <i class="fas fa-eye me-2"></i>View
+    </button>
+  </div>
+</form>
+
+
+
+{% if qr2_results %}
+<!-- ✅ Export Buttons -->
+<div class="mb-4 d-flex gap-2 flex-wrap">
+  <form method="POST" action="{{ url_for('download_search_pdf_qr2') }}">
+    <input type="hidden" name="serial_no" value="{{ request.form.serial_no }}">
+    <input type="hidden" name="set_no" value="{{ request.form.set_no }}">
+    <input type="hidden" name="id_no" value="{{ request.form.id_no }}">
+    <button class="btn btn-danger">
+      <i class="fas fa-file-pdf me-2"></i>Download PDF
+    </button>
+  </form>
+
+  <form method="POST" action="{{ url_for('download_search_csv_qr2') }}">
+    <input type="hidden" name="serial_no" value="{{ request.form.serial_no }}">
+    <input type="hidden" name="set_no" value="{{ request.form.set_no }}">
+    <input type="hidden" name="id_no" value="{{ request.form.id_no }}">
+    <button class="btn btn-success">
+      <i class="fas fa-file-csv me-2"></i>Download CSV
+    </button>
+  </form>
+</div>
+
+<!-- ✅ Results Table -->
+<div class="table-responsive">
+  <table class="table table-sm table-bordered table-striped text-center align-middle">
+    <thead class="table-primary">
+      <tr>
+        <th>Username</th>
+        <th>User Type</th>
+        <th>Timestamp</th>
+        <th>Unit</th>
+        <th>Shift</th>
+        <th>Crown Scan</th>
+        <th>Pinion Scan</th>
+        <th>Crown ID</th>
+        <th>Pinion ID</th>
+        <th>Crown Set</th>
+        <th>Pinion Set</th>
+        <th>ED No</th>
+        <th>Repeat No</th>
+        <th>Set Match</th>
+        <th>ED Match</th>
+        <th>Overall Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in qr2_results %}
+      <tr>
+        <td>{{ row.username }}</td>
+        <td>{{ row.user_type }}</td>
+        <td>{{ row.timestamp }}</td>
+        <td>{{ row.unit }}</td>
+        <td>{{ row.shift }}</td>
+        <td>{{ row.crown_scan }}</td>
+        <td>{{ row.pinion_scan }}</td>
+        <td>{{ row.crown_id }}</td>
+        <td>{{ row.pinion_id }}</td>
+        <td>{{ row.crown_set }}</td>
+        <td>{{ row.pinion_set }}</td>
+        <td>{{ row.ed_no }}</td>
+        <td>
+          <span class="badge {% if row.repeat_no|string == '1' %}bg-success{% else %}bg-danger{% endif %}">
+            {{ row.repeat_no }}
+          </span>
+        </td>
+        <td>
+          <span class="badge {% if row.set_match == 'YES' %}bg-success{% else %}bg-danger{% endif %}">
+            {{ row.set_match }}
+          </span>
+        </td>
+        <td>
+          <span class="badge {% if row.ed_match == 'YES' %}bg-success{% else %}bg-danger{% endif %}">
+            {{ row.ed_match }}
+          </span>
+        </td>
+        <td>
+          <span class="badge {% if row.overall_status == 'OK' %}bg-success{% else %}bg-danger{% endif %}">
+            {{ row.overall_status }}
+          </span>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% elif request.method == 'POST' %}
+<div class="alert alert-warning text-center">No data found for FQC-THANE search.</div>
+{% endif %}

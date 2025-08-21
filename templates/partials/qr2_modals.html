@@ -1,0 +1,112 @@
+<!-- Add FQC-THANE Part Modal -->
+<div class="modal fade" id="addQR2Modal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fas fa-plus me-2"></i>Add FQC-THANE Part</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="addQR2Form" class="needs-validation" novalidate>
+          <div class="mb-3">
+            <label class="form-label">Crown ID</label>
+            <input type="text" class="form-control" name="crown_id" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Crown ED No</label>
+            <input type="text" class="form-control" name="crown_ed_no" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Pinion ID</label>
+            <input type="text" class="form-control" name="pinion_id" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Pinion ED No</label>
+            <input type="text" class="form-control" name="pinion_ed_no" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Status</label>
+            <select class="form-select" name="status" required>
+              <option value="ACTIVE">Active</option>
+              <option value="INACTIVE">Inactive</option>
+            </select>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal"><i class="fas fa-times me-2"></i>Cancel</button>
+        <button class="btn btn-primary" onclick="submitAddQR2Part()"><i class="fas fa-save me-2"></i>Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Upload FQC-THANE Excel Modal -->
+<div class="modal fade" id="uploadQR2ExcelModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fas fa-file-excel me-2"></i>Upload FQC-THANE Excel</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="uploadQR2ExcelForm" enctype="multipart/form-data">
+          <div class="mb-3">
+            <label class="form-label">Excel File</label>
+            <input type="file" class="form-control" name="file" accept=".xlsx,.xls" required>
+            <div class="form-text">Must include Crown ID, Pinion ID, and ED columns.</div>
+          </div>
+        </form>
+        <div id="excelQR2Status" class="mt-2 text-danger" style="display: none;"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal"><i class="fas fa-times me-2"></i>Cancel</button>
+        <button class="btn btn-success" onclick="submitQR2ExcelUpload()"><i class="fas fa-upload me-2"></i>Upload</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit FQC-THANE Part Modal -->
+<div class="modal fade" id="editQR2Modal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fas fa-edit me-2"></i>Edit FQC-THANE Part</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="editQR2Form" class="needs-validation" novalidate>
+          <input type="hidden" name="id">
+          <div class="mb-3">
+            <label class="form-label">Crown ID</label>
+            <input type="text" class="form-control" name="crown_id" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Crown ED No</label>
+            <input type="text" class="form-control" name="crown_ed_no" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Pinion ID</label>
+            <input type="text" class="form-control" name="pinion_id" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Pinion ED No</label>
+            <input type="text" class="form-control" name="pinion_ed_no" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Status</label>
+            <select class="form-select" name="status" required>
+              <option value="ACTIVE">Active</option>
+              <option value="INACTIVE">Inactive</option>
+            </select>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal"><i class="fas fa-times me-2"></i>Cancel</button>
+        <button class="btn btn-primary" onclick="submitEditQR2Part()"><i class="fas fa-save me-2"></i>Save</button>
+      </div>
+    </div>
+  </div>
+</div>

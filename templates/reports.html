@@ -1,0 +1,271 @@
+{% extends "base.html" %}
+
+{% block title %}Reports{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <h2 class="card-title mb-4">
+                    <i class="fas fa-file-alt me-2"></i>Generate Reports
+                </h2>
+
+                <form id="reportForm" class="needs-validation" novalidate>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Start Date</label>
+                            <input type="date" class="form-control" name="start_date" required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">End Date</label>
+                            <input type="date" class="form-control" name="end_date" required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Shift</label>
+                            <select class="form-select" name="shift">
+                                <option value="">All Shifts</option>
+                                <option value="A">Shift A</option>
+                                <option value="B">Shift B</option>
+                                <option value="C">Shift C</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Select Machine</label>
+                            <select name="machine" class="form-select" required>
+                            <!--     <option value="" selected>select Machines</option> -->
+                                <option value="qr1" selected>FQC-DEWAS</option>
+                                <option value="qr2">FQC-THANE</option>
+                            </select>
+                        </div>
+
+
+                        <div class="col-12">
+                            <label class="form-label">Report Format</label>
+                            <div class="row g-2">
+                                <div class="col-md-6">
+                                    <div class="format-card" onclick="selectFormat('pdf')">
+                                        <input type="radio" name="format" value="pdf" class="format-radio" required>
+                                        <div class="format-icon">
+                                            <i class="fas fa-file-pdf fa-2x"></i>
+                                        </div>
+                                        <div class="format-label">PDF Report</div>
+                                        <div class="format-desc">Detailed report with formatting</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="format-card" onclick="selectFormat('csv')">
+                                        <input type="radio" name="format" value="csv" class="format-radio">
+                                        <div class="format-icon">
+                                            <i class="fas fa-file-csv fa-2x"></i>
+                                        </div>
+                                        <div class="format-label">CSV Report</div>
+                                        <div class="format-desc">Raw data for spreadsheet analysis</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-12 mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg w-100" id="generateBtn">
+                                <i class="fas fa-download me-2"></i>Generate Report
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.form-control,
+.form-select {
+    border: 2px solid #dee2e6;
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    transition: all 0.3s;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: rgb(62, 112, 150);
+    box-shadow: 0 0 0 0.25rem rgba(62, 112, 150, 0.25);
+}
+
+.format-card {
+    border: 2px solid #dee2e6;
+    border-radius: 10px;
+    padding: 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+}
+
+.format-card:hover {
+    border-color: rgb(62, 112, 150);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.format-card.selected {
+    border-color: rgb(62, 112, 150);
+    background-color: rgba(62, 112, 150, 0.1);
+}
+
+.format-radio {
+    position: absolute;
+    opacity: 0;
+}
+
+.format-icon {
+    margin-bottom: 1rem;
+    color: rgb(62, 112, 150);
+}
+
+.format-label {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.format-desc {
+    font-size: 0.875rem;
+    color: #6c757d;
+}
+
+.btn-primary {
+    border-radius: 10px;
+    padding: 1rem;
+    font-weight: 500;
+    letter-spacing: 1px;
+    background: linear-gradient(to right, rgb(62, 112, 150), rgb(62, 112, 150));
+    border: none;
+    transition: all 0.3s;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(to right, rgb(52, 100, 135), rgb(52, 100, 135));
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.generating {
+    position: relative;
+    pointer-events: none;
+}
+
+.generating:after {
+    content: '';
+    position: absolute;
+    width: 1em;
+    height: 1em;
+    top: 50%;
+    margin-top: -0.5em;
+    right: 1.5rem;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-radius: 50%;
+    border-top-color: #fff;
+    animation: spin 1s infinite linear;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function selectFormat(format) {
+    document.querySelector(`input[value="${format}"]`).checked = true;
+    document.querySelectorAll('.format-card').forEach(card => {
+        card.classList.remove('selected');
+    });
+    document.querySelector(`input[value="${format}"]`).closest('.format-card').classList.add('selected');
+}
+
+document.getElementById('reportForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    if (!this.checkValidity()) {
+        this.classList.add('was-validated');
+        return;
+    }
+
+    const generateBtn = document.getElementById('generateBtn');
+    generateBtn.classList.add('generating');
+    generateBtn.innerHTML = '<i class="fas fa-spinner me-2"></i>Generating Report...';
+
+    const formData = new FormData(this);
+
+    fetch('/download_report', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        const contentType = response.headers.get("Content-Type");
+
+        if (response.status !== 200) {
+            return response.json().then(err => {
+                throw new Error(err.error || 'Unknown error occurred');
+            });
+        }
+
+        const format = formData.get('format');
+        const extension = format === 'pdf' ? 'pdf' : 'csv';
+
+        return response.blob().then(blob => {
+            if (!blob || blob.size === 0) {
+                throw new Error('Empty file generated');
+            }
+
+            const disposition = response.headers.get('Content-Disposition');
+            let filename = `download_report.${extension}`;  // fallback
+
+            if (disposition && disposition.includes('filename=')) {
+                filename = disposition.split('filename=')[1].replace(/"/g, '').trim();
+            }
+
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+
+        });
+    })
+    .catch(error => {
+        console.error('Download error:', error);
+        alert("Failed to generate report: " + error.message);
+    })
+    .finally(() => {
+        generateBtn.classList.remove('generating');
+        generateBtn.innerHTML = '<i class="fas fa-download me-2"></i>Generate Report';
+    });
+});
+
+// Set default dates
+const today = new Date();
+const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate());
+document.querySelector('input[name="start_date"]').value = lastMonth.toISOString().split('T')[0];
+document.querySelector('input[name="end_date"]').value = today.toISOString().split('T')[0];
+</script>
+{% endblock %}

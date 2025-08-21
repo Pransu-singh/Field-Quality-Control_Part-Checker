@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block title %}Login{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center align-items-center min-vh-100">
+    <div class="col-md-6 col-lg-5">
+        <div class="card login-form-card">
+            <div class="card-body p-4">
+                <div class="text-center mb-4">
+                    <a href="{{ url_for('index') }}" class="back-button">
+                        <i class="fas fa-arrow-left"></i> BACK
+                    </a>
+                    <h2 class="mt-4">{{ user_type.replace('_', ' ') }} Login</h2>
+                </div>
+
+                <form method="POST" class="needs-validation" novalidate>
+                    <div class="form-floating mb-3">
+                        <input type="text" class="form-control" id="employee_id" name="employee_id" placeholder="Employee ID" required>
+                        <label for="employee_id">
+                            <i class="fas fa-id-card me-2"></i>Employee ID
+                        </label>
+                    </div>
+
+                    <div class="form-floating mb-4">
+                        <input type="password" class="form-control" id="password" name="password" placeholder="Password" required>
+                        <label for="password">
+                            <i class="fas fa-lock me-2"></i>Password
+                        </label>
+                        <button type="button" class="btn btn-link password-toggle" onclick="togglePassword()">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-sign-in-alt me-2"></i>LOGIN
+                        </button>
+                    </div>
+
+                    <div class="text-center mt-3">
+                        <a href="{{ url_for('forgot_password', role=user_type) }}" class="text-decoration-none">Forgot Password?</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.login-form-card {
+    background: rgba(255, 255, 255, 0.95);
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.form-floating > label {
+    color: #6c757d;
+}
+
+.form-control:focus {
+    border-color:rgb(62, 112, 150);
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+.password-toggle {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #6c757d;
+    padding: 0;
+    z-index: 5;
+}
+
+.back-button {
+    position: absolute;
+    left: 20px;
+    top: 20px;
+    color: #6c757d;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.back-button:hover {
+    color: rgb(62, 112, 150);
+}
+
+.forgot-password {
+    color: #6c757d;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.forgot-password:hover {
+    color:rgb(62, 112, 150);
+}
+
+.btn-primary {
+    background: linear-gradient(to right, rgb(62, 112, 150), rgb(62, 112, 150));
+    border: none;
+    font-weight: 500;
+    letter-spacing: 1px;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(to right,rgb(62, 112, 150), rgb(62, 112, 150));
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function togglePassword() {
+    const passwordInput = document.getElementById('password');
+    const toggleButton = document.querySelector('.password-toggle i');
+    
+    if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        toggleButton.classList.remove('fa-eye');
+        toggleButton.classList.add('fa-eye-slash');
+    } else {
+        passwordInput.type = 'password';
+        toggleButton.classList.remove('fa-eye-slash');
+        toggleButton.classList.add('fa-eye');
+    }
+}
+
+// Form validation
+(function () {
+    'use strict'
+    const forms = document.querySelectorAll('.needs-validation')
+    Array.from(forms).forEach(form => {
+        form.addEventListener('submit', event => {
+            if (!form.checkValidity()) {
+                event.preventDefault()
+                event.stopPropagation()
+            }
+            form.classList.add('was-validated')
+        }, false)
+    })
+})()
+</script>
+{% endblock %}

@@ -1,0 +1,239 @@
+<div class="row">
+    <div class="col-md-12 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="mb-0"><i class="fas fa-cogs me-2"></i>FQC-THANE Parts</h2>
+                    <div>
+                        <button class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#addQR2Modal">
+                            <i class="fas fa-plus me-2"></i>Add Single Part
+                        </button>
+                        <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#uploadQR2ExcelModal">
+                            <i class="fas fa-file-excel me-2"></i>Upload Excel
+                        </button>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped text-center align-middle">
+                        <thead class="table-primary">
+                            <tr>
+                                <th>Crown ID</th>
+                                <th>Pinion ID</th>
+                                <th>ED No</th>
+                                <th>Status</th>
+                                <th>Created By</th>
+                                <th>Created At</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in qr2_parts %}
+                            <tr>
+                                <td>{{ p.crown_id }}</td>
+                                <td>{{ p.pinion_id }}</td>
+                                <td>{{ p.ed_no }}</td>
+                                <td><span class="badge {% if p.status == 'ACTIVE' %}bg-success{% else %}bg-danger{% endif %}">{{ p.status }}</span></td>
+                                <td>{{ p.username }}</td>
+                                <td>{{ p.created_at.strftime('%Y-%m-%d') }}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary me-1" onclick="editQR2Part('{{ p.id }}')">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-sm {% if p.status == 'ACTIVE' %}btn-outline-success{% else %}btn-outline-danger{% endif %}"
+                                            onclick="toggleQR2Status('{{ p.id }}', '{{ p.status }}')"
+                                            title="Toggle Status">
+                                        <i class="fas {% if p.status == 'ACTIVE' %}fa-check-circle{% else %}fa-ban{% endif %}"></i>
+                                    </button>
+
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% include 'partials/qr2_modals.html' %}
+
+<script>
+function editQR2Part(id) {
+    fetch(`/api/qr2_parts/${id}`)
+        .then(res => res.json())
+        .then(data => {
+            const form = document.getElementById('editQR2Form');
+            if (!form) return;
+            form.elements['id'].value = data.id || '';
+            form.elements['crown_id'].value = data.crown_id || '';
+            form.elements['crown_ed_no'].value = data.crown_ed_no || '';
+            form.elements['pinion_id'].value = data.pinion_id || '';
+            form.elements['pinion_ed_no'].value = data.pinion_ed_no || '';
+            form.elements['status'].value = data.status || '';
+
+            const modal = new bootstrap.Modal(document.getElementById('editQR2Modal'));
+            modal.show();
+        });
+}
+
+function deleteQR2Part(id) {
+    if (confirm('Are you sure you want to delete this QR2 part?')) {
+        fetch(`/api/qr2_parts/${id}`, { method: 'DELETE' })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    localStorage.setItem('activePartsTab', '#qr2'); // Preserve tab
+                    location.reload();
+                } else {
+                    alert(data.message || data.error || 'Failed to delete the part.');
+                }
+            })
+            .catch(err => {
+                console.error('QR2 delete failed:', err);
+                alert('Something went wrong.');
+            });
+    }
+}
+
+function submitAddQR2Part() {
+    const form = document.getElementById('addQR2Form');
+    if (form.checkValidity()) {
+        const data = Object.fromEntries(new FormData(form).entries());
+        fetch('/add_part_qr2', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                localStorage.setItem('activePartsTab', '#qr2'); // Preserve tab
+                location.reload();
+            } else {
+                alert(data.message || data.error || 'Failed to add FQC-THANE part.');
+            }
+        });
+    }
+    form.classList.add('was-validated');
+}
+
+function submitEditQR2Part() {
+    const form = document.getElementById('editQR2Form');
+    if (form.checkValidity()) {
+        const data = Object.fromEntries(new FormData(form).entries());
+        fetch(`/update_part_qr2/${data.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                localStorage.setItem('activePartsTab', '#qr2'); // Preserve tab
+                location.reload();
+            } else {
+                alert(data.message || data.error || 'Failed to update FQC-THANE part.');
+            }
+        });
+    }
+    form.classList.add('was-validated');
+}
+
+ 
+function submitQR2ExcelUpload() {
+  const form = document.getElementById('uploadQR2ExcelForm');
+  const fileInput = form.querySelector('input[name="file"]');
+  const resultBody = document.getElementById('excelUploadResultBody');
+
+  if (!fileInput.files.length) {
+    resultBody.innerHTML = "<div class='text-danger'>Please select a file.</div>";
+    new bootstrap.Modal(document.getElementById('excelUploadResultModal')).show();
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append('file', fileInput.files[0]);
+
+  fetch('/upload_qr2_excel', {
+    method: 'POST',
+    body: formData
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.status === 'success') {
+      const skippedList = data.skipped_parts?.length
+        ? `<br><strong>⚠️ Skipped Parts:</strong><br><code>${data.skipped_parts.join('<br>')}</code>`
+        : '';
+      resultBody.innerHTML = `
+        ✅ <strong>FQC-THANE Excel Upload Completed</strong><br>
+        ✅ Inserted: <strong>${data.message.match(/\d+ inserted/)[0]}</strong><br>
+        ⚠️ Skipped: <strong>${data.message.match(/\d+ already existed/)[0]}</strong>
+        ${skippedList}
+      `;
+    } else {
+      resultBody.innerHTML = `<span class="text-danger">❌ ${data.error || "Upload failed"}</span>`;
+    }
+
+    new bootstrap.Modal(document.getElementById('excelUploadResultModal')).show();
+  })
+  .catch(err => {
+    console.error(err);
+    resultBody.innerHTML = `<span class="text-danger">❌ Upload failed. Please try again.</span>`;
+    new bootstrap.Modal(document.getElementById('excelUploadResultModal')).show();
+  });
+
+  form.classList.add('was-validated');
+}
+ 
+
+
+function toggleQR2Status(id, currentStatus) {
+  const newStatus = currentStatus === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
+
+  if (!confirm(`Are you sure you want to mark this part as ${newStatus}?`)) return;
+
+  fetch(`/api/qr2_parts/${id}/toggle`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status: newStatus })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.status === 'success') {
+      localStorage.setItem('activePartsTab', '#qr2');
+      location.reload();
+    } else {
+      alert(data.message || data.error || 'Failed to update status.');
+    }
+  })
+  .catch(err => {
+    console.error('Status toggle failed:', err);
+    alert('Something went wrong.');
+  });
+}
+
+
+// ✅ Keep QR2 tab active after reload
+
+document.addEventListener('DOMContentLoaded', function () {
+  const storageKey = 'activePartsTab';
+  const defaultTab = '#qr1';
+
+  // ⛔ Use default tab if nothing is saved
+  const tabId = localStorage.getItem(storageKey) || defaultTab;
+
+  const trigger = document.querySelector(`button[data-bs-target="${tabId}"]`);
+  if (trigger) new bootstrap.Tab(trigger).show();
+
+  // ✅ Save clicked tab
+  document.querySelectorAll('button[data-bs-toggle="tab"]').forEach(btn => {
+    btn.addEventListener('shown.bs.tab', function (e) {
+      localStorage.setItem(storageKey, e.target.getAttribute('data-bs-target'));
+    });
+  });
+});
+
+
+</script>

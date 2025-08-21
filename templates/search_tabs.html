@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% block title %}Search{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <h2 class="mb-4"><i class="fas fa-search me-2"></i>Search Part Data</h2>
+
+  <!-- Tabs -->
+  <ul class="nav nav-tabs" id="searchTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="qr1-tab"
+        data-bs-toggle="tab" data-bs-target="#qr1" type="button" role="tab">
+        FQC-DEWAS
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="qr2-tab"
+        data-bs-toggle="tab" data-bs-target="#qr2" type="button" role="tab">
+        FQC-THANE
+      </button>
+    </li>
+  </ul>
+
+  <!-- Tab Contents -->
+  <div class="tab-content mt-4" id="searchTabsContent">
+    <div class="tab-pane fade" id="qr1" role="tabpanel">
+      {% include 'partials/search_qr1.html' %}
+    </div>
+    <div class="tab-pane fade" id="qr2" role="tabpanel">
+      {% include 'partials/search_qr2.html' %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const storageKey = 'activeSearchTab';
+  const defaultTab = '#qr1';
+
+  // Restore last visited tab or use default
+  const savedTab = localStorage.getItem(storageKey) || defaultTab;
+  const trigger = document.querySelector(`button[data-bs-target="${savedTab}"]`);
+  if (trigger) new bootstrap.Tab(trigger).show();
+
+  // Save tab switch + clear its input fields
+  document.querySelectorAll('button[data-bs-toggle="tab"]').forEach(btn => {
+    btn.addEventListener('shown.bs.tab', function (e) {
+      const selectedTab = e.target.getAttribute('data-bs-target');
+      localStorage.setItem(storageKey, selectedTab);
+
+      // Clear all text inputs inside this tab pane
+      const targetPane = document.querySelector(selectedTab);
+      if (targetPane) {
+        targetPane.querySelectorAll('input[type="text"]').forEach(input => input.value = '');
+      }
+    });
+  });
+});
+</script>
+{% endblock %}
+ 

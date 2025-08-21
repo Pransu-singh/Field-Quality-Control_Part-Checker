@@ -1,0 +1,90 @@
+<!-- Add FQC-DEWAS Part Modal -->
+<div class="modal fade" id="addPartModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fas fa-plus me-2"></i>Add FQC-DEWAS Part</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="addPartForm" class="needs-validation" novalidate>
+          <div class="mb-3">
+            <label class="form-label">ID Number</label>
+            <input type="text" class="form-control" name="id_no" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">ED Number</label>
+            <input type="text" class="form-control" name="ed" required>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="fas fa-times me-2"></i>Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="submitAddPart()"><i class="fas fa-save me-2"></i>Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Upload Excel Modal -->
+<div class="modal fade" id="uploadExcelModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fas fa-file-excel me-2"></i>Upload Excel</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="uploadExcelForm" enctype="multipart/form-data">
+          <div class="mb-3">
+            <label class="form-label">Excel File</label>
+            <input type="file" class="form-control" name="file" accept=".xlsx,.xls" required>
+            <div class="form-text">Must include ID Number and ED Number columns.</div>
+          </div>
+        </form>
+        <div id="excelUploadStatus" class="mt-2 text-danger" style="display: none;"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="fas fa-times me-2"></i>Cancel</button>
+        <button type="button" class="btn btn-success" onclick="submitExcelUpload()"><i class="fas fa-upload me-2"></i>Upload</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit FQC-DEWAS Part Modal -->
+<div class="modal fade" id="editPartModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fas fa-edit me-2"></i>Edit FQC-DEWAS Part</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="editPartForm" class="needs-validation" novalidate>
+          <input type="hidden" name="id"> <!-- Primary key -->
+          <input type="hidden" name="original_id_no">
+          <div class="mb-3">
+            <label class="form-label">ID Number</label>
+            <input type="text" class="form-control" name="id_no" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">ED Number</label>
+            <input type="text" class="form-control" name="ed" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Status</label>
+            <select class="form-select" name="status" required>
+              <option value="ACTIVE">Active</option>
+              <option value="NOT_ACTIVE">Not Active</option>
+            </select>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="fas fa-times me-2"></i>Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="submitEditPart()"><i class="fas fa-save me-2"></i>Save</button>
+      </div>
+    </div>
+  </div>
+</div>
